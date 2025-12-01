@@ -16,6 +16,8 @@ class Database:
         self.grp = self.db.groups
         self.users = self.db.userdata
         self.req = self.db.requests
+        self.brutal = self.db.brutal
+        self.channels = self.db.channels
 
     async def find_join_req(self, id):
         return bool(await self.req.find_one({'id': id}))
