@@ -8,7 +8,11 @@ class script(object):
     UPGRADE_TEXT = """⭕Join these VIP channels to GET #FREE Access! & keep the fun rolling ♥!
 
 📆 Or wait until tomorrow... but who likes waiting? 😜"""
+    FORCESUB_MSG = """<b>👋 ʜᴇʟʟᴏ, {}!
     
+ʏᴏᴜ ɴᴇᴇᴅ ᴛᴏ ᴊᴏɪɴ ᴍʏ ᴄʜᴀɴɴᴇʟꜱ ᴛᴏ ᴜꜱᴇ ᴍᴇ
+ᴋɪɴᴅʟʏ ᴊᴏɪɴ ᴛʜᴇꜱᴇ ᴄʜᴀɴɴᴇʟꜱ 👇</b>
+"""
     VERIFIED_TEXT = """𓆩ཫ❤ <b><u>ᴄᴏɴɢʀᴀᴛꜱ {} </u></b>❤ཀ𓆪
 
 ʏᴏᴜ ᴀʀᴇ ᴠᴇʀɪꜰɪᴇᴅ ꜰᴏʀ {} ʜᴏᴜʀꜱ! 🎉\n\nɴᴏᴡ ʏᴏᴜ ʜᴀᴠᴇ <b><u>ᴜɴʟɪᴍɪᴛᴇᴅ ᴀᴄᴄᴇꜱꜱ</u></b> ᴜɴᴛɪʟ <b> {} </b>😊"""
