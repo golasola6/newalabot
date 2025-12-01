@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 import pytz  # Make sure to handle timezone correctly
 timezone = pytz.timezone("Asia/Kolkata")
 import datetime
+from math import ceil
 
 BATCH_FILES = {}
 DUMPLAZY = {}
@@ -193,41 +194,44 @@ async def start(client, message):
 
 # ====================================================================
         #6 => verification_steps ! [Youtube@LazyDeveloperr]
-        elif data.split("-", 1)[0] == "verify":
-            userid = data.split("-", 2)[1]
-            user_ids = message.from_user.id
-            prex = DUMPLAZY[user_ids]["pre"]  
-            lazy_file_id = DUMPLAZY[user_ids]["file_id"]
-            # print(prex)
-            # print(lazy_file_id)
-            token = data.split("-", 3)[2]
-            if str(message.from_user.id) != str(userid):
-                return await message.reply_text(
-                    text="<b>Invalid link or Expired link !</b>",
-                    protect_content=True
-                )
-            is_valid = await check_token(client, userid, token)
-            if is_valid == True:
-                await message.reply_text(
-                    text=f"<b>Hey {message.from_user.mention}, You are successfully verified !\nNow you have unlimited access for all movies till today midnight.</b>",
-                    reply_markup=InlineKeyboardMarkup([[
-                        InlineKeyboardButton("📺 GET FILE ✔", url=f"https://telegram.me/{temp.U_NAME}?start={prex}_{lazy_file_id}")
-                    ]]),
-                    protect_content=True
-                )
-                try:
-                    await verify_user(client, userid, token)
-                except Exception as Lazy:
-                    print(Lazy)
-            else:
-                return await message.reply_text(
-                    text="<b>Invalid link or Expired link !</b>",
-                    protect_content=True
-                )
+        # elif data.split("-", 1)[0] == "verify":
+        #     userid = data.split("-", 2)[1]
+        #     user_ids = message.from_user.id
+        #     prex = DUMPLAZY[user_ids]["pre"]  
+        #     lazy_file_id = DUMPLAZY[user_ids]["file_id"]
+        #     # print(prex)
+        #     # print(lazy_file_id)
+        #     token = data.split("-", 3)[2]
+        #     if str(message.from_user.id) != str(userid):
+        #         return await message.reply_text(
+        #             text="<b>Invalid link or Expired link !</b>",
+        #             protect_content=True
+        #         )
+        #     is_valid = await check_token(client, userid, token)
+        #     if is_valid == True:
+        #         await message.reply_text(
+        #             text=f"<b>Hey {message.from_user.mention}, You are successfully verified !\nNow you have unlimited access for all movies till today midnight.</b>",
+        #             reply_markup=InlineKeyboardMarkup([[
+        #                 InlineKeyboardButton("📺 GET FILE ✔", url=f"https://telegram.me/{temp.U_NAME}?start={prex}_{lazy_file_id}")
+        #             ]]),
+        #             protect_content=True
+        #         )
+        #         try:
+        #             await verify_user(client, userid, token)
+        #         except Exception as Lazy:
+        #             print(Lazy)
+        #     else:
+        #         return await message.reply_text(
+        #             text="<b>Invalid link or Expired link !</b>",
+        #             protect_content=True
+        #         )
         
 # ====================================================================
         lzy = message.from_user.first_name
-        daily_limit, subscription, assigned_channels, joined_channels = await lazybarier(client, lzy, user_id)
+        try:
+            daily_limit, subscription, assigned_channels, joined_channels = await lazybarier(client, lzy, user_id)
+        except Exception as e:
+            logging.info(e)
 # ==========================🚧 BARIER 2 🚧 ==========================================
         # if pre != "" and file_id != "requestmovie":
         if data.startswith("grantfreevip"):
@@ -435,7 +439,7 @@ async def start(client, message):
                 chat_id = int("-" + file_id.split("-")[1])
                 userid = message.from_user.id if message.from_user else None
                 if subscription == "free" and daily_limit <= 0:
-                    ghost_url = await get_shortlink(chat_id, f"https://telegram.me/{temp.U_NAME}?start=files_{file_id}")
+                    # ghost_url = await get_shortlink(chat_id, f"https://telegram.me/{temp.U_NAME}?start=files_{file_id}")
                     lazyfile = await client.send_message(
                         chat_id=userid,
                         text=f"😱Oh no! {message.from_user.mention} 💔.\n{to_small_caps(script.EXPIRED_TEXT)}\n\n📺 ꜰɪʟᴇ ɴᴀᴍᴇ : <code>{files.file_name}</code> \n\n🫧 ꜰɪʟᴇ ꜱɪᴢᴇ : <code>{get_size(files.file_size)}</code>\n\n{to_small_caps('🚩GET #File Access')}",
@@ -807,6 +811,123 @@ async def lazybarier(bot, l, user_id):
     return daily_limit, subscription, assigned_channels,joined_channels
 
 
+@Client.on_message(filters.private & filters.command("add_channel") & filters.user(ADMINS))
+async def setup_force_channel(client, message):
+    if len(message.command) < 2:
+        await message.reply("⚠️ Usage: /add_channel <channel_id>")
+        return
+
+    channel_id = message.command[1]
+
+    # Try to insert the new channel
+    inserted_channel_id = await db.add_new_required_channel(channel_id)
+
+    if inserted_channel_id:
+        await message.reply(f"✅ Channel ID: {channel_id} has been successfully added.")
+    else:
+        await message.reply(f"⚠️ Channel ID: {channel_id} is already in the list.")
+
+@Client.on_message(filters.private & filters.command("remove_channel") & filters.user(ADMINS))
+async def remove_force_channel(client, message):
+    if len(message.command) < 2:
+        await message.reply("⚠️ Usage: /remove_channel <channel_id>")
+        return
+
+    channel_id = message.command[1]
+
+    removed = await db.remove_required_channel(channel_id)
+
+    if removed:
+        await message.reply(f"✅ Channel ID: {channel_id} has been removed successfully.")
+    else:
+        await message.reply(f"❌ Channel ID: {channel_id} was not found in the list.")
+
+async def generate_channel_keyboard(client, page=1):
+    channels = await db.get_required_channels()
+    
+    if not channels:
+        return None  
+    
+    total_pages = ceil(len(channels) / CHANNELS_PER_PAGE)
+    page = max(1, min(page, total_pages))  #lazy page bounding
+    
+    start = (page - 1) * CHANNELS_PER_PAGE
+    end = start + CHANNELS_PER_PAGE
+    keyboard = []
+
+    for channel_id in channels[start:end]:
+        try:
+            chat = await client.get_chat(channel_id)
+            channel_name = f"{to_small_caps(chat.title)}"
+        except:
+            channel_name = f"{to_small_caps('❌ADMIN❌')}"
+        
+        clean_channel_id = str(channel_id).replace("-100", "")  # Remove "-100"
+        
+        row = [
+            InlineKeyboardButton(f"📢 {channel_name}", callback_data=f"info_{channel_id}"),
+            InlineKeyboardButton(f"{clean_channel_id}", callback_data=f"info_{channel_id}"),
+            InlineKeyboardButton("🗑 Remove", callback_data=f"remove_{channel_id}")
+        ]
+        keyboard.append(row)
+
+    # Pagination buttons
+    pagination_buttons = []
+    if page > 1:
+        pagination_buttons.append(InlineKeyboardButton(f"<", callback_data=f"page_{page-1}"))
+    pagination_buttons.append(InlineKeyboardButton(f"{page}/{total_pages}", callback_data="pages_info"))
+    if page < total_pages:
+        pagination_buttons.append(InlineKeyboardButton(f">", callback_data=f"page_{page+1}"))
+
+    keyboard.append(pagination_buttons)  # Add pagination row
+
+    return InlineKeyboardMarkup(keyboard)
+
+@Client.on_message(filters.private & filters.command("list_channels") & filters.user(ADMINS))
+async def list_required_channels(client, message):
+    try:
+        keyboard = await generate_channel_keyboard(client, page=1)
+        
+        if not keyboard:
+            await message.reply("⚠️ No required channels found.")
+            return
+        
+        await message.reply("📌 **Required Channels:**", reply_markup=keyboard)
+    except Exception as e:
+        logging.info(e)
+
+@Client.on_callback_query(filters.regex(r"^(page|remove|info)_(.+)"))
+async def callback_handler(client, query):
+    action, data = query.data.split("_", 1)
+
+    if action == "page":
+        page = int(data)
+        keyboard = await generate_channel_keyboard(client, page)
+        
+        if keyboard:
+            await query.message.edit_reply_markup(reply_markup=keyboard)  
+    elif action == "info":
+        channel_id = data.replace("-100", "")
+        await query.answer(f"CHANNEL ID: {channel_id}", show_alert=True)
+
+    elif action == "remove":
+        channel_id = data 
+        success = await db.remove_required_channel(channel_id)
+
+        if success:
+            keyboard = await generate_channel_keyboard(client, page=1)
+            if keyboard:
+                await query.message.edit_reply_markup(reply_markup=keyboard) 
+            else:
+                await query.message.edit_text("⚠️ No required channels found.")
+            
+            await query.answer("✅ Channel removed successfully!", show_alert=True)
+        else:
+            await query.answer("❌ Failed to remove the channel. Please try again.", show_alert=True)
+
+# ======================================================
+
+# 
 @Client.on_message(filters.command('channel') & filters.user(ADMINS))
 async def channel_info(bot, message):
            
