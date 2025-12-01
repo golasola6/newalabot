@@ -434,43 +434,38 @@ async def start(client, message):
                     protect_content=True
                 )
         
-        if data.startswith("sendfiles"):
+        elif data.startswith("sendfiles"):
             try:
-                # chat_id = int("-" + file_id.split("-")[1])
                 userid = message.from_user.id if message.from_user else None
+                chat_id = message.chat.id
+                lzy = message.from_user.first_name
+                files_ = await get_file_details(file_id)
+                files = files_[0]
                 if subscription == "free" and daily_limit <= 0:
                     # ghost_url = await get_shortlink(chat_id, f"https://telegram.me/{temp.U_NAME}?start=files_{file_id}")
                     lazyfile = await client.send_message(
                         chat_id=userid,
-                        text=f"😱Oh no! {message.from_user.mention} 💔.\n{to_small_caps(script.EXPIRED_TEXT)}\n\n📺 ꜰɪʟᴇ ɴᴀᴍᴇ : <code>{files.file_name}</code> \n\n🫧 ꜰɪʟᴇ ꜱɪᴢᴇ : <code>{get_size(files.file_size)}</code>\n\n{to_small_caps('🚩GET #File Access')}",
+                        text=f"😱Oh no! {message.from_user.mention} 💔.\n{to_small_caps(script.EXPIRED_TEXT)}\n\n📺 ꜰɪʟᴇ ɴᴀᴍᴇ : <code>{files.file_name}</code> \n\n🫧 ꜰɪʟᴇ ꜱɪᴢᴇ : <code>{get_size(files.file_size)}</code>\n\n{to_small_caps('🚩GET #File Access ✔')}",
                         reply_markup=InlineKeyboardMarkup(
                             [
                                 # [
                                 #     InlineKeyboardButton(f"{to_small_caps('📁 Continue with ADS 📁')}", url=ghost_url)
                                 # ],
                                 [
-                                    InlineKeyboardButton("𓆩ཫ♥ • Get File Access • ♥ཀ𓆪", callback_data=f"grantfreevip#{file_id}")
+                                    InlineKeyboardButton("𓆩ཫ♥ • Get File Acccess • ♥ཀ𓆪", callback_data=f"grantfreevip#{file_id}")
                                 ]
                             ]
                         )
                         )
-
-                    await asyncio.sleep(1200)
+                    await asyncio.sleep(1000)
                     await k.edit("<b>Your message is successfully deleted!!!</b>")
+                    return
                 else:
                     print(f"passed for {userid} ==> daily_limit ==> {daily_limit}")
-                    # #finally - overacting ka 1 rupees kaat lo 💘😊
-                    # if subscription !="limited":
-                    #     await db.deduct_limit(user_id)
-                    #     # logging.info(f"\n\n::::::::::>> Tried to Deduct limit for user [{message.from_user.first_name}] :|::> ID ::> {user_id} :|::> AT : {datetime.datetime.now()}")
-                    # else:
-                    #     pass
-                    #     # logging.info(f"\n\nFailed to deduct limit for user ::> [{message.from_user.first_name}] :| ID ::> {user_id} :|::> ERROR AT :  {datetime.datetime.now()}")
                     pass
             except Exception as e:
                 logging.info(f"Error handling sendfiles: {e}")
                 return
-
         elif data.startswith("short"):
             user = message.from_user.id
             chat_id = temp.SHORT.get(user)
