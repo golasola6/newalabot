@@ -231,7 +231,7 @@ async def start(client, message):
         try:
             daily_limit, subscription, assigned_channels, joined_channels = await lazybarier(client, lzy, user_id)
         except Exception as e:
-            logging.info(e)
+            logging.info(f"errrrrrrrrr: {e}")
 # ==========================🚧 BARIER 2 🚧 ==========================================
         # if pre != "" and file_id != "requestmovie":
         if data.startswith("grantfreevip"):
@@ -436,7 +436,7 @@ async def start(client, message):
                 )
         if data.startswith("sendfiles"):
             try:
-                chat_id = int("-" + file_id.split("-")[1])
+                # chat_id = int("-" + file_id.split("-")[1])
                 userid = message.from_user.id if message.from_user else None
                 if subscription == "free" and daily_limit <= 0:
                     # ghost_url = await get_shortlink(chat_id, f"https://telegram.me/{temp.U_NAME}?start=files_{file_id}")
