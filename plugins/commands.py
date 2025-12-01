@@ -236,8 +236,10 @@ async def start(client, message):
         if data.startswith("grantfreevip"):
             # daily_limit, subscription, assigned_channels, _= await lazybarier(client, lzy, user_id)
             # Limit free users to 3 videos per day
+            print('pass 1')
             if subscription == "free" and daily_limit <= 0:
                 try:
+                    print('pass 2')
                     lazybtn = []
                     lazydeloper = 0
                     for channel in assigned_channels:
@@ -265,7 +267,7 @@ async def start(client, message):
                             lazybtn.append([
                                     InlineKeyboardButton(f"{to_small_caps('🚩 Join Channel')} {lazydeloper}", url=invite_link.invite_link),
                                     ]) # bahut deemag khraab hua h is feature ko add krne mei #lazydeveloper 😢
-                    
+                    print('pass 3')
                     lazy_updated_data = await db.get_user(user_id)
                     lazy_joined_channels = set(lazy_updated_data.get("joined_channels", []))
                     if not assigned_channels.issubset(lazy_joined_channels):
@@ -287,11 +289,47 @@ async def start(client, message):
                                 "file_id": file_id,
                                 "the_one&only_LazyDeveloper": True
                             }
-                        return
+                    return
                 except Exception as e:
                     logging.info(f"Error in Barier: {e}")
                     return await message.reply(f"{script.FAILED_VERIFICATION_TEXT}")                
 
+# ===========================[ ❤ PASS 🚀 ]======================================
+        
+        elif data.startswith("sendfiles"):
+            try:
+                userid = message.from_user.id if message.from_user else None
+                chat_id = message.chat.id
+                lzy = message.from_user.first_name
+                files_ = await get_file_details(file_id)
+                files = files_[0]
+                if subscription == "free" and daily_limit <= 0:
+                    # ghost_url = await get_shortlink(chat_id, f"https://telegram.me/{temp.U_NAME}?start=files_{file_id}")
+                    lazyfile = await client.send_message(
+                        chat_id=userid,
+                        text=f"😱Oh no! {message.from_user.mention} 💔.\n{to_small_caps(script.EXPIRED_TEXT)}\n\n📺 ꜰɪʟᴇ ɴᴀᴍᴇ : <code>{files.file_name}</code> \n\n🫧 ꜰɪʟᴇ ꜱɪᴢᴇ : <code>{get_size(files.file_size)}</code>\n\n{to_small_caps('🚩GET #File Access ✔')}",
+                        reply_markup=InlineKeyboardMarkup(
+                            [
+                                # [
+                                #     InlineKeyboardButton(f"{to_small_caps('📁 Continue with ADS 📁')}", url=ghost_url)
+                                # ],
+                                [
+                                    InlineKeyboardButton("𓆩ཫ♥ • Get File Acccess • ♥ཀ𓆪", callback_data=f"grantfreevip#{file_id}")
+                                ]
+                            ]
+                        )
+                        )
+                    await asyncio.sleep(1000)
+                    await k.edit("<b>Your message is successfully deleted!!!</b>")
+                    return
+                else:
+                    print(f"passed for {userid} ==> daily_limit ==> {daily_limit}")
+                    pass
+            except Exception as e:
+                logging.info(f"Error handling sendfiles: {e}")
+                return
+        
+        
         # ==============================
         if data.split("-", 1)[0] == "BATCH":
             sts = await message.reply("<b>Please wait...</b>")
@@ -433,39 +471,7 @@ async def start(client, message):
                     text="<b>Invalid link or Expired link !</b>",
                     protect_content=True
                 )
-        
-        elif data.startswith("sendfiles"):
-            try:
-                userid = message.from_user.id if message.from_user else None
-                chat_id = message.chat.id
-                lzy = message.from_user.first_name
-                files_ = await get_file_details(file_id)
-                files = files_[0]
-                if subscription == "free" and daily_limit <= 0:
-                    # ghost_url = await get_shortlink(chat_id, f"https://telegram.me/{temp.U_NAME}?start=files_{file_id}")
-                    lazyfile = await client.send_message(
-                        chat_id=userid,
-                        text=f"😱Oh no! {message.from_user.mention} 💔.\n{to_small_caps(script.EXPIRED_TEXT)}\n\n📺 ꜰɪʟᴇ ɴᴀᴍᴇ : <code>{files.file_name}</code> \n\n🫧 ꜰɪʟᴇ ꜱɪᴢᴇ : <code>{get_size(files.file_size)}</code>\n\n{to_small_caps('🚩GET #File Access ✔')}",
-                        reply_markup=InlineKeyboardMarkup(
-                            [
-                                # [
-                                #     InlineKeyboardButton(f"{to_small_caps('📁 Continue with ADS 📁')}", url=ghost_url)
-                                # ],
-                                [
-                                    InlineKeyboardButton("𓆩ཫ♥ • Get File Acccess • ♥ཀ𓆪", callback_data=f"grantfreevip#{file_id}")
-                                ]
-                            ]
-                        )
-                        )
-                    await asyncio.sleep(1000)
-                    await k.edit("<b>Your message is successfully deleted!!!</b>")
-                    return
-                else:
-                    print(f"passed for {userid} ==> daily_limit ==> {daily_limit}")
-                    pass
-            except Exception as e:
-                logging.info(f"Error handling sendfiles: {e}")
-                return
+
         elif data.startswith("short"):
             user = message.from_user.id
             chat_id = temp.SHORT.get(user)
