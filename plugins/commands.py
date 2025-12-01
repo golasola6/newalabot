@@ -228,10 +228,9 @@ async def start(client, message):
         
 # ====================================================================
         lzy = message.from_user.first_name
-        # try:
+        
         daily_limit, subscription, assigned_channels, joined_channels = await lazybarier(client, lzy, user_id)
-        # except Exception as e:
-        #     logging.info(f"errrrrrrrrr: {e}")
+        
 # ==========================🚧 BARIER 2 🚧 ==========================================
         # if pre != "" and file_id != "requestmovie":
         if data.startswith("grantfreevip"):
@@ -723,31 +722,31 @@ async def start(client, message):
 # 
 async def lazybarier(bot, l, user_id):
     user = await db.get_user(user_id) # user ko database se call krna h
-    all_channels = await db.get_required_channels()
+    # all_channels = await db.get_required_channels()
     # if isinstance(AUTH_CHANNEL, int):  
     #     all_channels.append(AUTH_CHANNEL)  # Lazy  
     # else:
     #     all_channels.extend(AUTH_CHANNEL)  # Lazy  
-    temp.ASSIGNED_CHANNEL = all_channels
+    # temp.ASSIGNED_CHANNEL = all_channels
     # 
     if not user:
-        joined_channels = set()
-        for channel in all_channels:
-            if await is_subscribed(bot, channel, user_id):
-                joined_channels.add(channel)
+        # joined_channels = set()
+        # for channel in all_channels:
+        #     if await is_subscribed(bot, channel, user_id):
+        #         joined_channels.add(channel)
 
         today = str(datetime.date.today())
         # new_assigned_channels = set(random.sample(all_channels, 2)) #  
         # new_assigned_channels = set(sorted(all_channels, reverse=True)[:2])
-        new_assigned_channels = set(sorted(set(all_channels) - joined_channels)[:2])
+        # new_assigned_channels = set(sorted(set(all_channels) - joined_channels)[:2])
 
         attach_data = {
             "id": user_id,
             "subscription": "free",
             "subscription_expiry": None,
             "daily_limit": DAILY_LIMIT,
-            "assigned_channels": list(new_assigned_channels),
-            "joined_channels": list(joined_channels) ,
+            # "assigned_channels": list(new_assigned_channels),
+            # "joined_channels": list(joined_channels) ,
             "last_access": today,
             "diverting_channel": None
         }
@@ -757,25 +756,25 @@ async def lazybarier(bot, l, user_id):
     subscription_expiry = user.get("subscription_expiry")
     daily_limit = user.get("daily_limit", DAILY_LIMIT)
     last_access = user.get("last_access")
-    assigned_channels = set(user.get("assigned_channels", []))
-    joined_channels = set(user.get("joined_channels", []))
+    # assigned_channels = set(user.get("assigned_channels", []))
+    # joined_channels = set(user.get("joined_channels", []))
     
     today = str(datetime.date.today())
     if last_access != today:
         if subscription == "free":
-            for channel in all_channels:
-                if await is_subscribed(bot, channel, user_id):
-                    joined_channels.add(channel)
-            new_channels = set(sorted(set(all_channels) - joined_channels)[:2])
-            if not new_channels:
-                joined_channels = set()  # Reset joined channels
-                new_channels = set(random.sample(all_channels, 2))  # Pick 2 random channels
+            # for channel in all_channels:
+            #     if await is_subscribed(bot, channel, user_id):
+            #         joined_channels.add(channel)
+            # new_channels = set(sorted(set(all_channels) - joined_channels)[:2])
+            # if not new_channels:
+            #     joined_channels = set()  # Reset joined channels
+            #     new_channels = set(random.sample(all_channels, 2))  # Pick 2 random channels
 
             data = {"id": user_id,
                     "daily_limit": DAILY_LIMIT, 
                     "last_access": today,
-                    "assigned_channels": list(new_channels),
-                    "joined_channels": list(joined_channels),
+                    # "assigned_channels": list(new_channels),
+                    # "joined_channels": list(joined_channels),
                     }
             await db.update_user(data)
 
@@ -786,31 +785,33 @@ async def lazybarier(bot, l, user_id):
         expiry_time = timezone.localize(expiry_time)  # Ensure expiry time is in UTC
         current_time = datetime.datetime.now(timezone)  # Current time in IST
         if current_time > expiry_time:
-            for channel in all_channels:
-                if await is_subscribed(bot, channel, user_id):
-                    joined_channels.add(channel)
-            new_channels = set(sorted(set(all_channels) - joined_channels)[:2])
-            if not new_channels:
-                joined_channels = set()  # Reset joined channels
-                new_channels = set(random.sample(all_channels, 2))  # Pick 2 random channels
+            # print("changing expiry time")
+            # for channel in all_channels:
+            #     if await is_subscribed(bot, channel, user_id):
+            #         joined_channels.add(channel)
+            # new_channels = set(sorted(set(all_channels) - joined_channels)[:2])
+            # if not new_channels:
+            #     joined_channels = set()  # Reset joined channels
+            #     new_channels = set(random.sample(all_channels, 2))  # Pick 2 random channels
             usersdata = {
                 "id": user_id,
                 "subscription": "free", 
                 "subscription_expiry": None, 
                 "daily_limit": DAILY_LIMIT,
-                "assigned_channels": list(new_channels),
-                "joined_channels": list(joined_channels),
+                # "assigned_channels": list(new_channels),
+                # "joined_channels": list(joined_channels),
                 }
             await db.update_user(usersdata)
+            logging.info(f"usersdata {usersdata}")
 
     updated_data = await db.get_user(user_id)
     daily_limit = updated_data.get("daily_limit", DAILY_LIMIT)
     subscription = updated_data.get("subscription", "free")
     assigned_channels = set(updated_data.get("assigned_channels", []))
     joined_channels = set(updated_data.get("joined_channels", []))
+    # diverting_channel = updated_data.get("diverting_channel", None)
     
-    return daily_limit, subscription, assigned_channels,joined_channels
-
+    return daily_limit, subscription, assigned_channels, joined_channels
 
 @Client.on_message(filters.private & filters.command("add_channel") & filters.user(ADMINS))
 async def setup_force_channel(client, message):
