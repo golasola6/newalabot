@@ -88,7 +88,6 @@ async def join_reqs(client, message: ChatJoinRequest):
                         chat_id=user_id,
                         file_id=file_id,
                         caption=lazy_caption_template,
-                        reply_markup=keyboard,  
                         protect_content=PROTECT_CONTENT,
                         )
                     
