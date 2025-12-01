@@ -51,7 +51,7 @@ async def Lazy_start():
     await initialize_clients()
     if ON_HEROKU:
         asyncio.create_task(ping_server())
-    b_users, b_chats , lz_verified = await db.get_banned()
+    b_users, b_chats = await db.get_banned()
     temp.BANNED_USERS = b_users
     temp.BANNED_CHATS = b_chats
     await Media.ensure_indexes()
