@@ -16,7 +16,6 @@ from info import *
 from utils import  get_size, temp
 from urllib.parse import quote
 from utils import schedule_deletion, to_small_caps
-from plugins.commands import send_lazy_video
 import base64
 logger = logging.getLogger(__name__)
 from utils import temp
@@ -76,25 +75,22 @@ async def join_reqs(client, message: ChatJoinRequest):
                     sharelazymsg = f"{to_small_caps('•❤ Access file at your fingertip ❤•')}\n{to_small_caps('🤝 Join us now for the latest movies and entertainment!')}"
                     lazydeveloper_text = quote(sharelazymsg)
                     # 
-                    send_to_lazy_channel = diverting_channel if diverting_channel is not None else LAZY_DIVERTING_CHANNEL
-                    button = [
-                        [
-                            InlineKeyboardButton(to_small_caps('▶Stream/Dl'), callback_data=f'generate_stream_link:{file_id}'),
-                            InlineKeyboardButton(to_small_caps('🔁Share💕'), url=f"https://t.me/share/url?url={share_url}&text={lazydeveloper_text}")
+                    # button = [
+                    #     [
+                    #         InlineKeyboardButton(to_small_caps('▶Stream/Dl'), callback_data=f'generate_stream_link:{file_id}'),
+                    #         InlineKeyboardButton(to_small_caps('🔁Share💕'), url=f"https://t.me/share/url?url={share_url}&text={lazydeveloper_text}")
                         
-                        ],[
-                            InlineKeyboardButton('𓆩ཫ💰 • ᴅᴏɴᴀᴛᴇ ᴜꜱ • 💰ཀ𓆪', url=DONATION_LINK),
-                        ]]
-                    keyboard = InlineKeyboardMarkup(button)
+                    #     ],[
+                    #         InlineKeyboardButton('𓆩ཫ💰 • ᴅᴏɴᴀᴛᴇ ᴜꜱ • 💰ཀ𓆪', url=DONATION_LINK),
+                    #     ]]
+                    # keyboard = InlineKeyboardMarkup(button)
                     lazy_file = await client.send_cached_media(
-                        chat_id=send_to_lazy_channel,
+                        chat_id=user_id,
                         file_id=file_id,
                         caption=lazy_caption_template,
                         reply_markup=keyboard,  
                         protect_content=PROTECT_CONTENT,
                         )
-                    # 
-                    asyncio.create_task(send_lazy_video(client, message, send_to_lazy_channel, lazy_file))
                     
                     # asyncio.create_task(schedule_deletion(client, user_id, lazy_file))
                     

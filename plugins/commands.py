@@ -458,8 +458,7 @@ async def start(client, message):
             except Exception as e:
                 logging.info(f"Error handling sendfiles: {e}")
             return
-            
-        
+
         elif data.startswith("short"):
             user = message.from_user.id
             chat_id = temp.SHORT.get(user)
