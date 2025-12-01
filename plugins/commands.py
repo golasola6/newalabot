@@ -228,10 +228,10 @@ async def start(client, message):
         
 # ====================================================================
         lzy = message.from_user.first_name
-        try:
-            daily_limit, subscription, assigned_channels, joined_channels = await lazybarier(client, lzy, user_id)
-        except Exception as e:
-            logging.info(f"errrrrrrrrr: {e}")
+        # try:
+        daily_limit, subscription, assigned_channels, joined_channels = await lazybarier(client, lzy, user_id)
+        # except Exception as e:
+        #     logging.info(f"errrrrrrrrr: {e}")
 # ==========================🚧 BARIER 2 🚧 ==========================================
         # if pre != "" and file_id != "requestmovie":
         if data.startswith("grantfreevip"):
@@ -434,6 +434,7 @@ async def start(client, message):
                     text="<b>Invalid link or Expired link !</b>",
                     protect_content=True
                 )
+        
         if data.startswith("sendfiles"):
             try:
                 # chat_id = int("-" + file_id.split("-")[1])
