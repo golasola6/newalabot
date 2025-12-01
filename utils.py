@@ -1,6 +1,6 @@
 import logging
 from pyrogram.errors import InputUserDeactivated, UserNotParticipant, FloodWait, UserIsBlocked, PeerIdInvalid
-from info import AUTH_CHANNEL, LONG_IMDB_DESCRIPTION, MAX_LIST_ELM, SHORTLINK_URL, SHORTLINK_API, IS_SHORTLINK, LOG_CHANNEL, TUTORIAL, GRP_LNK, CHNL_LNK, CUSTOM_FILE_CAPTION
+from info import *
 from imdb import Cinemagoer 
 import asyncio
 from pyrogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup
@@ -97,9 +97,9 @@ async def lazy_has_subscribed(client, update):
             lazydeveloperMBS = await client.get_chat_member(chat_id=channel, user_id=lazydeveloperIDS)
         except UserNotParticipant:
             return False
-        if lazydeveloperMBS.status not in [ChatMemberStatus.OWNER, 
-                                ChatMemberStatus.ADMINISTRATOR, 
-                                ChatMemberStatus.MEMBER]:
+        if lazydeveloperMBS.status not in [enums.ChatMemberStatus.OWNER, 
+                                enums.ChatMemberStatus.ADMINISTRATOR, 
+                                enums.ChatMemberStatus.MEMBER]:
             return False
 
     return True
