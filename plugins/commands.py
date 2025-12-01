@@ -454,10 +454,18 @@ async def start(client, message):
                             ]
                         )
                         )
+
                     await asyncio.sleep(1200)
                     await k.edit("<b>Your message is successfully deleted!!!</b>")
                 else:
                     print(f"passed for {userid} ==> daily_limit ==> {daily_limit}")
+                    # #finally - overacting ka 1 rupees kaat lo 💘😊
+                    # if subscription !="limited":
+                    #     await db.deduct_limit(user_id)
+                    #     # logging.info(f"\n\n::::::::::>> Tried to Deduct limit for user [{message.from_user.first_name}] :|::> ID ::> {user_id} :|::> AT : {datetime.datetime.now()}")
+                    # else:
+                    #     pass
+                    #     # logging.info(f"\n\nFailed to deduct limit for user ::> [{message.from_user.first_name}] :| ID ::> {user_id} :|::> ERROR AT :  {datetime.datetime.now()}")
                     pass
             except Exception as e:
                 logging.info(f"Error handling sendfiles: {e}")
@@ -546,6 +554,15 @@ async def start(client, message):
                     )
                 )
                 filesarr.append(msg)
+            
+            #finally - overacting ka 1 rupees kaat lo 💘😊
+            if subscription !="limited":
+                await db.deduct_limit(user_id)
+                # logging.info(f"\n\n::::::::::>> Tried to Deduct limit for user [{message.from_user.first_name}] :|::> ID ::> {user_id} :|::> AT : {datetime.datetime.now()}")
+            else:
+                pass
+                # logging.info(f"\n\nFailed to deduct limit for user ::> [{message.from_user.first_name}] :| ID ::> {user_id} :|::> ERROR AT :  {datetime.datetime.now()}")
+
             k = await client.send_message(chat_id = message.from_user.id, text=f"<b><u>❗️❗️❗️IMPORTANT❗️️❗️❗️</u></b>\n\nThis Movie Files/Videos will be deleted in <b><u>20 minutes</u> 🫥 <i></b>(Due to Copyright Issues)</i>.\n\n<b><i>Please forward this ALL Files/Videos to your Saved Messages and Start Download there</i></b>")
             await asyncio.sleep(1200)
             for x in filesarr:
@@ -700,14 +717,8 @@ async def start(client, message):
                 )
             )
         )
-        btn = [[
-            InlineKeyboardButton("Get File Again", callback_data=f'delfile#{file_id}')
-        ]]
-        k = await msg.reply("<b><u>❗️❗️❗️IMPORTANT❗️️❗️❗️</u></b>\n\nThis Movie File/Video will be deleted in <b><u>20 minutes</u> 🫥 <i></b>(Due to Copyright Issues)</i>.\n\n<b><i>Please forward this File/Video to your Saved Messages and Start Download there</i></b>",quote=True)
-        await asyncio.sleep(1200)
-        await msg.delete()
-        await k.edit_text("<b>Your File/Video is successfully deleted!!!\n\nClick below button to get your deleted file 👇</b>",reply_markup=InlineKeyboardMarkup(btn))
-
+        
+        
         #finally - overacting ka 1 rupees kaat lo 💘😊
         if subscription !="limited":
             await db.deduct_limit(user_id)
@@ -715,6 +726,14 @@ async def start(client, message):
         else:
             pass
             # logging.info(f"\n\nFailed to deduct limit for user ::> [{message.from_user.first_name}] :| ID ::> {user_id} :|::> ERROR AT :  {datetime.datetime.now()}")
+
+        btn = [[
+            InlineKeyboardButton("Get File Again", callback_data=f'delfile#{file_id}')
+        ]]
+        k = await msg.reply("<b><u>❗️❗️❗️IMPORTANT❗️️❗️❗️</u></b>\n\nThis Movie File/Video will be deleted in <b><u>20 minutes</u> 🫥 <i></b>(Due to Copyright Issues)</i>.\n\n<b><i>Please forward this File/Video to your Saved Messages and Start Download there</i></b>",quote=True)
+        await asyncio.sleep(1200)
+        await msg.delete()
+        await k.edit_text("<b>Your File/Video is successfully deleted!!!\n\nClick below button to get your deleted file 👇</b>",reply_markup=InlineKeyboardMarkup(btn))
         return
     except Exception as Lazyerr:
         print(Lazyerr)
