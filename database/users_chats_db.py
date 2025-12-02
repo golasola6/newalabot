@@ -21,7 +21,7 @@ class Database:
 
     async def find_join_req(self, id):
         return bool(await self.req.find_one({'id': id}))
-        
+
     async def add_join_req(self, id):
         await self.req.insert_one({'id': id})
 
@@ -32,6 +32,9 @@ class Database:
         return dict(
             id = id,
             name = name,
+            _id=int(id),
+            file_id=None,
+            join_date=date.today().isoformat(),
             ban_status=dict(
                 is_banned=False,
                 ban_reason="",
@@ -47,7 +50,7 @@ class Database:
                 reason="",
             ),
         )
-    
+
     async def add_user(self, id, name):
         user = self.new_user(id, name)
         await self.col.insert_one(user)
@@ -208,7 +211,6 @@ class Database:
         return self.users.find({})
     
 
-
     async def has_prime_status(self, user_id):
         user_data = await self.get_user(user_id)
         if user_data:
@@ -240,6 +242,7 @@ class Database:
                 print(f"⚠️ Invalid expiry time format for user {user_id}: {expiry_time_str}")
             
         return False
+
     async def get_user_data(self, user_id):
         return self.brutal.find_one({'user_id': user_id})
 
@@ -259,7 +262,7 @@ class Database:
             self.brutal.insert_one({'user_id': user_id, 'free_videos': 0, 'subscribed_channels': [], 'expiry': None})
             user_data = {'free_videos': 0, 'subscribed_channels': [], 'expiry': None}
         
-        if user_data['free_videos'] < DAILY_LIMIT:
+        if user_data['free_videos'] < FREE_LIMIT:
             self.brutal.update_one({'user_id': user_id}, {'$inc': {'free_videos': 1}})
             return True
         
