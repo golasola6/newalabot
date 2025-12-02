@@ -748,7 +748,7 @@ async def lazybarier(bot, l, user_id):
     #     all_channels.append(AUTH_CHANNEL)  # Lazy  
     # else:
     #     all_channels.extend(AUTH_CHANNEL)  # Lazy  
-    # temp.ASSIGNED_CHANNEL = all_channels
+    temp.ASSIGNED_CHANNEL = all_channels
     # 
     if not user:
         joined_channels = set()
@@ -783,15 +783,18 @@ async def lazybarier(bot, l, user_id):
     today = str(datetime.date.today())
     print('br 3')
     if last_access != today:
+        print("ok1")
         if subscription == "free":
             for channel in all_channels:
                 if await is_subscribed(bot, channel, user_id):
                     joined_channels.add(channel)
+                    print("ok2")
             new_channels = set(sorted(set(all_channels) - joined_channels)[:2])
+            print("ok3")
             if not new_channels:
                 joined_channels = set()  # Reset joined channels
                 new_channels = set(random.sample(all_channels, 2))  # Pick 2 random channels
-
+            print("ok4")
             data = {"id": user_id,
                     "daily_limit": DAILY_LIMIT, 
                     "last_access": today,
@@ -799,7 +802,7 @@ async def lazybarier(bot, l, user_id):
                     "joined_channels": list(joined_channels),
                     }
             await db.update_user(data)
-
+            print("ok5")
     # Check for expired subscriptions
     # sabko indian time zone ke hisab se chlna pdega #LazyDeveloper 😂
     print('br 4')
