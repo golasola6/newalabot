@@ -320,7 +320,7 @@ async def start(client, message):
                         )
                         )
                     await asyncio.sleep(1000)
-                    await k.edit("<b>Your message is successfully deleted!!!</b>")
+                    await lazyfile.edit("<b>Your message is successfully deleted!!!</b>")
                     return
                 else:
                     print(f"passed for {userid} ==> daily_limit ==> {daily_limit}")
@@ -741,13 +741,14 @@ async def start(client, message):
 
 # 
 async def lazybarier(bot, l, user_id):
+    print('br 1')
     user = await db.get_user(user_id) # user ko database se call krna h
     all_channels = await db.get_required_channels()
     # if isinstance(AUTH_CHANNEL, int):  
     #     all_channels.append(AUTH_CHANNEL)  # Lazy  
     # else:
     #     all_channels.extend(AUTH_CHANNEL)  # Lazy  
-    temp.ASSIGNED_CHANNEL = all_channels
+    # temp.ASSIGNED_CHANNEL = all_channels
     # 
     if not user:
         joined_channels = set()
@@ -771,6 +772,7 @@ async def lazybarier(bot, l, user_id):
         }
         await db.update_user(attach_data)
         user = await db.get_user(user_id)
+    print('br 2')
     subscription = user.get("subscription", "free")
     subscription_expiry = user.get("subscription_expiry")
     daily_limit = user.get("daily_limit", DAILY_LIMIT)
@@ -779,6 +781,7 @@ async def lazybarier(bot, l, user_id):
     joined_channels = set(user.get("joined_channels", []))
     
     today = str(datetime.date.today())
+    print('br 3')
     if last_access != today:
         if subscription == "free":
             for channel in all_channels:
@@ -799,6 +802,7 @@ async def lazybarier(bot, l, user_id):
 
     # Check for expired subscriptions
     # sabko indian time zone ke hisab se chlna pdega #LazyDeveloper 😂
+    print('br 4')
     if subscription == "limited" and subscription_expiry:
         expiry_time = datetime.datetime.strptime(subscription_expiry, "%Y-%m-%d %H:%M:%S")
         expiry_time = timezone.localize(expiry_time)  # Ensure expiry time is in UTC
@@ -821,12 +825,13 @@ async def lazybarier(bot, l, user_id):
                 }
             await db.update_user(usersdata)
 
+    print("br 5")
     updated_data = await db.get_user(user_id)
     daily_limit = updated_data.get("daily_limit", DAILY_LIMIT)
     subscription = updated_data.get("subscription", "free")
     assigned_channels = set(updated_data.get("assigned_channels", []))
     joined_channels = set(updated_data.get("joined_channels", []))
-    
+    print('br 6')
     return daily_limit, subscription, assigned_channels,joined_channels
 
 # async def lazybarier(bot, l, user_id):
