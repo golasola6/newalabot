@@ -1071,7 +1071,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
             except Exception as e:
                 await query.answer(url=f"https://t.me/{temp.U_NAME}?start={ident}_{file_id}")
         except Exception as e:
-            print(e)
+            print(f"error in pm_filter : {e}")
     
     elif query.data.startswith("sendfiles"):
         user = query.from_user.id
