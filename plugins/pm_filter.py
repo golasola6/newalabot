@@ -1024,7 +1024,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
                 subscription = user.get("subscription", "free")
             else:
                 subscription = "free"
-
+            print("pass 2")
             if CUSTOM_FILE_CAPTION:
                 try:
                     f_caption = CUSTOM_FILE_CAPTION.format(file_name='' if title is None else title,
@@ -1035,7 +1035,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
                 f_caption = f_caption
             if f_caption is None:
                 f_caption = f"{files.file_name}"
-            
+            print("pass 3")
             try:
                 try:
                     if int(query.from_user.id) not in [query.message.reply_to_message.from_user.id, 0]:
@@ -1047,7 +1047,7 @@ async def cb_handler(client: Client, query: CallbackQuery):
                         )
                 except Exception:
                     pass
-
+                print("pass 4")
                 if AUTH_CHANNEL and not await lazy_has_subscribed(client, query):
                     print("NO AUTH SUBS")
                     await query.answer(url=f"https://t.me/{temp.U_NAME}?start={ident}_{file_id}")
