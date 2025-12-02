@@ -2,7 +2,7 @@ import motor.motor_asyncio
 from info import DAILY_LIMIT, DATABASE_NAME, DATABASE_URI, IMDB, IMDB_TEMPLATE, MELCOW_NEW_USERS, P_TTI_SHOW_OFF, SINGLE_BUTTON, SPELL_CHECK_REPLY, PROTECT_CONTENT, AUTO_DELETE, MAX_BTN, AUTO_FFILTER, SHORTLINK_API, SHORTLINK_URL, IS_SHORTLINK, TUTORIAL, IS_TUTORIAL
 # Free limit per user
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ChatJoinRequest
-JOIN_REQUIRED = 1  # Number of channels user must join for unlimited access
+JOIN_REQUIRED = 2  # Number of channels user must join for unlimited access
 import pytz
 from datetime import datetime, timedelta, date
 timezone = pytz.timezone("Asia/Kolkata")
@@ -262,7 +262,7 @@ class Database:
             self.brutal.insert_one({'user_id': user_id, 'free_videos': 0, 'subscribed_channels': [], 'expiry': None})
             user_data = {'free_videos': 0, 'subscribed_channels': [], 'expiry': None}
         
-        if user_data['free_videos'] < FREE_LIMIT:
+        if user_data['free_videos'] < DAILY_LIMIT:
             self.brutal.update_one({'user_id': user_id}, {'$inc': {'free_videos': 1}})
             return True
         
@@ -285,5 +285,9 @@ class Database:
             reply_markup=InlineKeyboardMarkup(btns)
         )
         return False
-
+    
+    async def get_user_data(self, id) -> dict:
+        user = await self.col.find_one({'id': int(id)})
+        return user or None
+    
 db = Database(DATABASE_URI, DATABASE_NAME)
