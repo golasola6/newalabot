@@ -794,6 +794,7 @@ async def lazybarier(bot, l, user_id):
             if not new_channels:
                 joined_channels = set()  # Reset joined channels
                 new_channels = set(random.sample(all_channels, 2))  # Pick 2 random channels
+                print(f'new channels : {new_channels}')
             print("ok4")
             data = {"id": user_id,
                     "daily_limit": DAILY_LIMIT, 
@@ -801,6 +802,7 @@ async def lazybarier(bot, l, user_id):
                     "assigned_channels": list(new_channels),
                     "joined_channels": list(joined_channels),
                     }
+            print(f"data {data}")
             await db.update_user(data)
             print("ok5")
     # Check for expired subscriptions
