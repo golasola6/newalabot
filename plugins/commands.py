@@ -931,6 +931,54 @@ async def lazybarier(bot, l, user_id):
 #     # diverting_channel = updated_data.get("diverting_channel", None)
     
 #     return daily_limit, subscription, assigned_channels, joined_channels
+@Client.on_message(filters.command("reset_user") & filters.user(ADMINS))  # Only admin can use it
+async def delete_user(client, message):
+    try:
+        # Extract user ID from the command
+        if len(message.command) < 2:
+            return await message.reply_text("❌ **Usage:** `/reset_user <user_id>`")
+        
+        target_user_id = int(message.command[1])
+
+        # Delete user from database
+        result = await db.users.delete_one({"id": target_user_id})
+
+        if result.deleted_count > 0:
+            await message.reply_text(f"✅ **User {target_user_id} has been removed from the database!**")
+        else:
+            await message.reply_text(f"⚠️ **User {target_user_id} not found in the database!**")
+
+    except Exception as e:
+        await message.reply_text("⚠️ **Failed to delete user. Check logs for details.**")
+
+@Client.on_message(filters.command("approveall") & filters.user(ADMINS))  # Only admins can use it
+async def approveall_user(client, message):
+    try:
+        if len(message.command) < 2:
+            return await message.reply_text("❌ **Usage:** `/approveall <channel_id>`")
+
+        target_channel_id = int(message.command[1])
+        await message.reply(to_small_caps("Please wait...\nProcessing your request..."))
+        # ✅ Get all user IDs correctly
+        users = await db.get_all_joins() 
+        print(users)
+        approved_count = 0
+        async for user in users:
+            lazyidx = user.get('id')
+            if lazyidx:  # ✅ Only approve users with pending requests
+                try:
+                    await client.approve_chat_join_request(target_channel_id, lazyidx)
+                    approved_count += 1
+                except:
+                    pass
+            else:
+                print(f"⚠️ Skipped {lazyidx} (No pending request)")
+
+        await message.reply_text(f"✅ Approved ::>> {approved_count} users")
+
+    except Exception as e:
+        print(f"⚠️ Error in approveall_user: {e}")
+        await message.reply_text("💔 **Failed to approve users. Check logs for details.**")
 
 @Client.on_message(filters.private & filters.command("add_channel") & filters.user(ADMINS))
 async def setup_force_channel(client, message):
