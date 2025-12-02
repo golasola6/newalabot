@@ -14,7 +14,7 @@ class Database:
         self.db = self._client[database_name]
         self.col = self.db.users
         self.grp = self.db.groups
-        self.users = self.db.userdata
+        self.lazyusers = self.db.userdata
         self.req = self.db.requests
         self.brutal = self.db.brutal
         self.channels = self.db.channels
@@ -190,7 +190,7 @@ class Database:
             # Check if the user is a free user
             if subscription == "free":
                 if daily_limit > 0:
-                    await self.users.update_one(
+                    await self.lazyusers.update_one(
                         {"id": user_id},
                         {"$inc": {"daily_limit": -1}}
                     )
@@ -201,14 +201,14 @@ class Database:
         return False  # User not found
    
     async def update_user(self, user_data):
-        await self.users.update_one({"id": user_data["id"]}, {"$set": user_data}, upsert=True)
+        await self.lazyusers.update_one({"id": user_data["id"]}, {"$set": user_data}, upsert=True)
 
     async def get_user(self, user_id):
-        user_data = await self.users.find_one({"id": user_id})
+        user_data = await self.lazyusers.find_one({"id": user_id})
         return user_data
     
     async def get_all_joins(self):
-        return self.users.find({})
+        return self.lazyusers.find({})
     
 
     async def has_prime_status(self, user_id):
@@ -235,7 +235,7 @@ class Database:
                     return True
                 else:
                     # If expired, reset the expiry field in the database
-                    await self.users.update_one({"id": user_id}, {"$set": {"subscription": "free", "daily_limit": DAILY_LIMIT, "subscription_expiry": None}})
+                    await self.lazyusers.update_one({"id": user_id}, {"$set": {"subscription": "free", "daily_limit": DAILY_LIMIT, "subscription_expiry": None}})
                     return False  # Subscription has expired
 
             except ValueError:
