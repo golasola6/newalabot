@@ -199,7 +199,7 @@ class Database:
    
     async def update_user(self, user_data):
         await self.users.update_one({"id": user_data["id"]}, {"$set": user_data}, upsert=True)
-   
+
     async def get_user(self, user_id):
         user_data = await self.users.find_one({"id": user_id})
         return user_data
