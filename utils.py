@@ -993,7 +993,7 @@ async def get_token(bot, userid, link):
     TOKENS[user.id] = {token: False}
     link = f"{link}verify-{user.id}-{token}"
     print(link)
-    final_verified_lazy_link = await extract_verified_short_link(user.id, link)
+    final_verified_lazy_link = await extract_verified_short_link(link)
     return str(final_verified_lazy_link)
 # =====================================================
 from datetime import datetime, timedelta
