@@ -4,7 +4,7 @@ from database.ia_filterdb import save_file
 
 media_filter = filters.document | filters.video | filters.audio
 
-# multiple channels support system
+
 @Client.on_message(filters.chat(CHANNELS) & media_filter)
 async def media(bot, message):
     """Media Handler"""

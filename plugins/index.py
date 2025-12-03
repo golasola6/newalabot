@@ -3,24 +3,29 @@ import asyncio
 from pyrogram import Client, filters, enums
 from pyrogram.errors import FloodWait
 from pyrogram.errors.exceptions.bad_request_400 import ChannelInvalid, ChatAdminRequired, UsernameInvalid, UsernameNotModified
-from info import ADMINS
+from info import ADMINS, LAZY_RENAMERS
 from info import INDEX_REQ_CHANNEL as LOG_CHANNEL
+from info import LAZY_MODE 
 from database.ia_filterdb import save_file
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from utils import temp
 import re
+import humanize
+from info import ADMINS 
+from lazybot import LazyPrincessBot 
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 lock = asyncio.Lock()
-
+semaphore = asyncio.Semaphore(1) # create a semaphore with initial value of 1
 
 @Client.on_callback_query(filters.regex(r'^index'))
 async def index_files(bot, query):
     if query.data.startswith('index_cancel'):
         temp.CANCEL = True
         return await query.answer("Cancelling Indexing")
-    _, raju, chat, lst_msg_id, from_user = query.data.split("#")
-    if raju == 'reject':
+    _, lazydeveloperr, chat, lst_msg_id, from_user = query.data.split("#")
+    if lazydeveloperr == 'reject':
         await query.message.delete()
         await bot.send_message(int(from_user),
                                f'Your Submission for indexing {chat} has been decliened by our moderators.',
@@ -47,7 +52,6 @@ async def index_files(bot, query):
     except:
         chat = chat
     await index_files_to_db(int(lst_msg_id), chat, msg, bot)
-
 
 @Client.on_message((filters.forwarded | (filters.regex("(https://)?(t\.me/|telegram\.me/|telegram\.dog/)(c/)?(\d+|[a-zA-Z_0-9]+)/(\d+)$")) & filters.text ) & filters.private & filters.incoming)
 async def send_for_index(bot, message):
@@ -77,35 +81,50 @@ async def send_for_index(bot, message):
     try:
         k = await bot.get_messages(chat_id, last_msg_id)
     except:
-        return await message.reply('Make Sure That Iam An Admin In The Channel, if channel is private')
+        return await message.reply('Make Sure That i am An Admin In The Channel, if channel is private')
     if k.empty:
-        return await message.reply('This may be group and iam not a admin of the group.')
+        return await message.reply('This may be group and i am not a admin of the group.')
 
     if message.from_user.id in ADMINS:
-        buttons = [
-            [
-                InlineKeyboardButton('Yes',
-                                     callback_data=f'index#accept#{chat_id}#{last_msg_id}#{message.from_user.id}')
-            ],
-            [
-                InlineKeyboardButton('close', callback_data='close_data'),
+        if (LAZY_MODE==True):
+            file = getattr(message, message.media.value)
+            filename = file.file_name
+            filesize = humanize.naturalsize(file.file_size) 
+            buttons = [
+                [ InlineKeyboardButton("📝✧ Start Renaming ✧📝", callback_data="rename") ],
+                [ InlineKeyboardButton('📇✧✧  S𝚝ar𝚝 Indexing  ✧✧📇',callback_data=f'index#accept#{chat_id}#{last_msg_id}#{message.from_user.id}')],
+                [ InlineKeyboardButton('⨳  C L Ф S Ξ  ⨳', callback_data='cancel'),]
             ]
-        ]
-        reply_markup = InlineKeyboardMarkup(buttons)
-        return await message.reply(
-            f'Do you Want To Index This Channel/ Group ?\n\nChat ID/ Username: <code>{chat_id}</code>\nLast Message ID: <code>{last_msg_id}</code>',
-            reply_markup=reply_markup)
+            reply_markup = InlineKeyboardMarkup(buttons)
+            return await message.reply(
+                f'\n⨳ Rename Mode ⨳\n\n**__What do you want me to do with this file.?__**\n\n🪬Chat ID/ Username: <code>{chat_id}</code>\nℹ️Last Message ID: <code>{last_msg_id}</code> \n\n🎞**File Name** :- `{filename}`\n\n⚙️**File Size** :- `{filesize}`',
+                reply_to_message_id=message.id,
+                reply_markup=reply_markup)
+        else:
+            buttons = [
+                [
+                    InlineKeyboardButton('Yes',
+                                         callback_data=f'index#accept#{chat_id}#{last_msg_id}#{message.from_user.id}')
+                ],
+                [
+                    InlineKeyboardButton('⨳  C L Ф S Ξ  ⨳', callback_data='close_data'),
+                ]
+            ]
+            reply_markup = InlineKeyboardMarkup(buttons)
+            return await message.reply(
+                f'Do you Want To Index This Channel/ Group ?\n\nChat ID/ Username: <code>{chat_id}</code>\nLast Message ID: <code>{last_msg_id}</code>',
+                reply_markup=reply_markup)
 
     if type(chat_id) is int:
         try:
             link = (await bot.create_chat_invite_link(chat_id)).invite_link
-        except ChatAdminRequired:
-            return await message.reply('Make sure iam an admin in the chat and have permission to invite users.')
+        except ChatAdminRequired: 
+            return await message.reply('Make sure i am an admin in the chat and have permission to invite users.')
     else:
         link = f"@{message.forward_from_chat.username}"
     buttons = [
         [
-            InlineKeyboardButton('Accept Index',
+            InlineKeyboardButton('Request Index',
                                  callback_data=f'index#accept#{chat_id}#{last_msg_id}#{message.from_user.id}')
         ],
         [
@@ -117,8 +136,40 @@ async def send_for_index(bot, message):
     await bot.send_message(LOG_CHANNEL,
                            f'#IndexRequest\n\nBy : {message.from_user.mention} (<code>{message.from_user.id}</code>)\nChat ID/ Username - <code> {chat_id}</code>\nLast Message ID - <code>{last_msg_id}</code>\nInviteLink - {link}',
                            reply_markup=reply_markup)
-    await message.reply('ThankYou For the Contribution, Wait For My Moderators to verify the files.')
-
+    if (LAZY_MODE == True):
+        if message.from_user.id in LAZY_RENAMERS:
+            k = await message.reply('🎉\n\n❤️ Thank You For the Contribution, Wait For My Moderators to verify the files.\n\n\n🎁')
+            buttons = [
+                        [InlineKeyboardButton("📝✧✧ S𝚝ar𝚝 Renaming ✧✧📝", callback_data="rename") ],
+                        [InlineKeyboardButton('⨳  C L Ф S Ξ  ⨳', callback_data='cancel')]]
+            reply_markup = InlineKeyboardMarkup(buttons)
+            file = getattr(message, message.media.value)
+            filename = file.file_name
+            filesize = humanize.naturalsize(file.file_size) 
+            await message.reply(
+                                f".\n⨳ Rename Mode ⨳\n\nSince you are an Authentic user, please don't hesitate to ask me for any other help...\n\n🪬Chat ID/ Username: <code>{chat_id}</code>\nℹ️Last Message ID: <code>{last_msg_id}</code> \n\n🎞**File Name** :- `{filename}`\n\n⚙️**File Size** :- `{filesize}`\n\nYou can simply close this window or perform following actions, it's upon you",
+                                reply_to_message_id=message.id,
+                                reply_markup=reply_markup)
+            await asyncio.sleep(600)
+            await k.delete()
+        else :      
+            await message.reply('🎉\n\n❤️ Thank You For the Contribution, Wait For My Moderators to verify the files.\n\n\n🎁')
+            buttons = [
+                        [InlineKeyboardButton("📝✧✧ S𝚝ar𝚝 Renaming ✧✧📝", callback_data="requireauth") ],
+                        [InlineKeyboardButton('⨳  C L Ф S Ξ  ⨳', callback_data='cancel')]]
+            reply_markup = InlineKeyboardMarkup(buttons)
+            file = getattr(message, message.media.value)
+            filename = file.file_name
+            filesize = humanize.naturalsize(file.file_size) 
+            k = await message.reply(
+                                f"\n⨳ Rename Mode ⨳\n\n🤩 Do you know I can do a lot of things at a time...\nWould you like to try some of it's amazing features... \n\n🪬Chat ID/ Username: <code>{chat_id}</code>\nℹ️Last Message ID: <code>{last_msg_id}</code> \n\n🎞**File Name** :- `{filename}`\n\n⚙️**File Size** :- `{filesize}`",
+                                reply_to_message_id=message.id,
+                                reply_markup=reply_markup)
+            await asyncio.sleep(600)
+            await k.delete()
+    else:
+        await message.reply('🎉\n\n❤️ Thank You For the Contribution, Wait For My Moderators to verify the files.\n\n\n🎁')
+ 
 
 @Client.on_message(filters.command('setskip') & filters.user(ADMINS))
 async def set_skip_number(bot, message):
@@ -163,6 +214,7 @@ async def index_files_to_db(lst_msg_id, chat, msg, bot):
                     no_media += 1
                     continue
                 elif message.media not in [enums.MessageMediaType.VIDEO, enums.MessageMediaType.AUDIO, enums.MessageMediaType.DOCUMENT]:
+                # elif message.media != enums.MessageMediaType.VIDEO:   
                     unsupported += 1
                     continue
                 media = getattr(message, message.media.value, None)
@@ -180,6 +232,6 @@ async def index_files_to_db(lst_msg_id, chat, msg, bot):
                     errors += 1
         except Exception as e:
             logger.exception(e)
-            await msg.edit(f'Error: {e}')
+            await msg.edit(f'Error baby: {e}')
         else:
             await msg.edit(f'Succesfully saved <code>{total_files}</code> to dataBase!\nDuplicate Files Skipped: <code>{duplicate}</code>\nDeleted Messages Skipped: <code>{deleted}</code>\nNon-Media messages skipped: <code>{no_media + unsupported}</code>(Unsupported Media - `{unsupported}` )\nErrors Occurred: <code>{errors}</code>')

@@ -16,6 +16,7 @@ from info import *
 from utils import  get_size, temp
 from urllib.parse import quote
 from utils import schedule_deletion, to_small_caps
+from plugins.commands import send_lazy_video
 import base64
 logger = logging.getLogger(__name__)
 from utils import temp
@@ -39,9 +40,9 @@ async def join_reqs(client, message: ChatJoinRequest):
 
             user = await db.get_user(message.from_user.id)
             assigned_channels = set(user.get("assigned_channels"))  # Get assigned channels
-            diverting_channel = user.get("diverting_channel", None)
+            # diverting_channel = user.get("diverting_channel", None)
             if assigned_channels.issubset(joined_channels):  # If all are joined
-                expiry_time = datetime.now(timezone) + timedelta(hours=MAX_SUBSCRIPTION_TIME)  # 24 hours from now
+                expiry_time = datetime.now(timezone) + timedelta(seconds=MAX_SUBSCRIPTION_TIME)  # 24 hours from now
                 expiry_str = expiry_time.strftime("%Y-%m-%d %H:%M:%S")  # Format as YYYY-MM-DD HH:MM:SS
 
                 await db.update_user({"id": message.from_user.id, "subscription": "limited", "subscription_expiry": expiry_str})
@@ -70,27 +71,33 @@ async def join_reqs(client, message: ChatJoinRequest):
 
                     along_with_lazy_info = f"<b><u>⚠ DELETING IN {lazy_readable(FILE_AUTO_DELETE_TIME)} ⚠\nꜰᴏʀᴡᴀʀᴅ ᴀɴᴅ ꜱᴛᴀʀᴛ ᴅᴏᴡɴʟᴏᴀᴅɪɴɢ ᴛʜᴇʀᴇ </u></b>"
                     along_with_lazy_footer = f"<b>Dear {message.from_user.mention} ! {script.DONATION_TEXT}</b>"
-                    lazy_caption_template =f"{along_with_lazy_info}\n\n<b>{f_caption}</b>\n\n{along_with_lazy_footer}"
+                    lazy_caption_template =f"{along_with_lazy_info}\n\n<b>{f_caption}</b>"
                     share_url = f"https://t.me/{temp.U_NAME}?start=file_{file_id}"
                     sharelazymsg = f"{to_small_caps('•❤ Access file at your fingertip ❤•')}\n{to_small_caps('🤝 Join us now for the latest movies and entertainment!')}"
                     lazydeveloper_text = quote(sharelazymsg)
                     # 
-                    # button = [
-                    #     [
-                    #         InlineKeyboardButton(to_small_caps('▶Stream/Dl'), callback_data=f'generate_stream_link:{file_id}'),
-                    #         InlineKeyboardButton(to_small_caps('🔁Share💕'), url=f"https://t.me/share/url?url={share_url}&text={lazydeveloper_text}")
+                    # send_to_lazy_channel = diverting_channel if diverting_channel is not None else LAZY_DIVERTING_CHANNEL
+                    button = [
+                        [
+                          # InlineKeyboardButton(to_small_caps('▶Stream/Dl'), callback_data=f'generate_stream_link:{file_id}'),
+                          InlineKeyboardButton(to_small_caps('🔁Share💕'), url=f"https://t.me/share/url?url={share_url}&text={lazydeveloper_text}")
                         
-                    #     ],[
-                    #         InlineKeyboardButton('𓆩ཫ💰 • ᴅᴏɴᴀᴛᴇ ᴜꜱ • 💰ཀ𓆪', url=DONATION_LINK),
-                    #     ]]
-                    # keyboard = InlineKeyboardMarkup(button)
+                        ],[
+                            InlineKeyboardButton('𓆩ཫ💰 • ᴅᴏɴᴀᴛᴇ ᴜꜱ • 💰ཀ𓆪', url=DONATION_LINK),
+                        ]]
+                    keyboard = InlineKeyboardMarkup(button)
                     lazy_file = await client.send_cached_media(
-                        chat_id=user_id,
+                        chat_id=message.from_user.id,
                         file_id=file_id,
                         caption=lazy_caption_template,
+                        reply_markup=keyboard,  
                         protect_content=PROTECT_CONTENT,
                         )
-                    
+                    # 
+                    # asyncio.create_task(send_lazy_video(client, message, send_to_lazy_channel, lazy_file))
+                    lazy_lota = []
+                    lazy_lota.append(lazy_file)
+                    asyncio.create_task(schedule_deletion(client, user_id, lazy_lota, BATCH=True))
                     # asyncio.create_task(schedule_deletion(client, user_id, lazy_file))
                     
                     if await db.deduct_limit(user_id):

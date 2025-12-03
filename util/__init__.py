@@ -1,1 +1,1 @@
-# I hate my Dirty-Mind @LazyDeveloperr & @Simplifytuber2 😎😍
+# I hate my Dirty-Mind @LazyDeveloperr 😎😍

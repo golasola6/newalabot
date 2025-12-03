@@ -1,11 +1,18 @@
-    #Thanks @Lazydeveloperr helping this journey 
+    # Credit @LazyDeveloper.
+    # Please Don't remove credit.
+    # Born to make history @LazyDeveloper !
+
+    # Thank you LazyDeveloper for helping us in this Journey
+    # 🥰  Thank you for giving me credit @LazyDeveloperr  🥰
+
+    # for any error please contact me -> telegram@LazyDeveloperr or insta @LazyDeveloperr 
+
 import asyncio
 import logging
 from info import *
 from pyrogram import Client
 from util.config_parser import TokenParser
 from . import multi_clients, work_loads, LazyPrincessBot
-
 
 async def initialize_clients():
     multi_clients[0] = LazyPrincessBot
@@ -14,7 +21,7 @@ async def initialize_clients():
     if not all_tokens:
         print("No additional clients found, using default client")
         return
-    
+
     async def start_client(client_id, token):
         try:
             print(f"Starting - Client {client_id}")

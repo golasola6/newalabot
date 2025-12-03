@@ -1,4 +1,10 @@
-#Thanks @Lazydeveloperr helping this journey 
+# Credit @LazyDeveloper.
+# Please Don't remove credit.
+# Born to make history @LazyDeveloper !
+# Thank you LazyDeveloper for helping us in this Journey
+# 🥰  Thank you for giving me credit @LazyDeveloperr  🥰
+# for any error please contact me -> telegram@LazyDeveloperr or insta @LazyDeveloperr 
+# rip paid developers 🤣 - >> No need to buy paid source code while @LazyDeveloperr is here 😍😍
 import math
 import asyncio
 import logging
@@ -58,6 +64,9 @@ class ByteStreamer:
         self.cached_file_ids[id] = file_id
         logging.debug(f"Cached media message with ID {id}")
         return self.cached_file_ids[id]
+    
+        # with Love @LazyDeveloperr 💘
+        # Subscribe YT @LazyDeveloperr - to learn more about this for free...
 
     async def generate_media_session(self, client: Client, file_id: FileId) -> Session:
         """

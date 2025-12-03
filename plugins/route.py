@@ -1,26 +1,49 @@
-from aiohttp import web
+# Taken from megadlbot_oss <https://github.com/eyaadh/megadlbot_oss/blob/master/mega/webserver/routes.py>
+# Thanks to Eyaadh <https://github.com/eyaadh>
+# Credit @LazyDeveloper.
+# Please Don't remove credit.
+# Born to make history @LazyDeveloper !
+# Thank you LazyDeveloper for helping us in this Journey
+# 🥰  Thank you for giving me credit @LazyDeveloperr  🥰
+# for any error please contact me -> telegram@LazyDeveloperr or insta @LazyDeveloperr 
+
+
 import re
 import math
 import logging
 import secrets
 import time
 import mimetypes
+from aiohttp import web
 from aiohttp.http_exceptions import BadStatusLine
 from lazybot import multi_clients, work_loads, LazyPrincessBot
 from server.exceptions import FIleNotFound, InvalidHash
 from zzint import StartTime, __version__
 from util.custom_dl import ByteStreamer
 from util.time_format import get_readable_time
-from util.render_template import render_page
+from util.render_template import render_page, render_lazydeveloper
 from info import *
-
+import base64
 
 routes = web.RouteTableDef()
 
 @routes.get("/", allow_head=True)
 async def root_route_handler(request):
-    return web.json_response("Made by ❤ LazyDeveloper")
-
+    return web.json_response(
+        {
+            "server_status": "running",
+            "uptime": get_readable_time(time.time() - StartTime),
+            "telegram_bot": "@" + LazyPrincessBot.username,
+            "connected_bots": len(multi_clients),
+            "loads": dict(
+                ("bot" + str(c + 1), l)
+                for c, (_, l) in enumerate(
+                    sorted(work_loads.items(), key=lambda x: x[1], reverse=True)
+                )
+            ),
+            "version": __version__,
+        }
+    )
 
 @routes.get(r"/watch/{path:\S+}", allow_head=True)
 async def stream_handler(request: web.Request):
@@ -150,3 +173,27 @@ async def media_streamer(request: web.Request, id: int, secure_hash: str):
             "Accept-Ranges": "bytes",
         },
     )
+
+@routes.get(r"/getfile/{unique_id}", allow_head=True)
+async def file_handler(request: web.Request):
+    """
+    Validate the unique_id and serve the page for the shorten video URL.
+    """
+    try:
+        # Extract unique_id and message_id from the URL
+        encoded_string = request.match_info["unique_id"]
+        # message_id = int(request.match_info["message_id"])
+        decoded_url = base64.urlsafe_b64decode(encoded_string.encode()).decode()
+
+        if not decoded_url.startswith("http"):
+            raise web.HTTPNotFound(text="❌ URL not found or invalid.")
+
+        # Render the play.html with the retrieved URL
+        return web.Response(
+            text=await render_lazydeveloper(decoded_url),
+            content_type="text/html"
+        )
+
+    except Exception as e:
+        logging.critical(e, exc_info=True)
+        raise web.HTTPInternalServerError(text=f"❌ An error occurred: {str(e)}")

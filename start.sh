@@ -1,8 +1,14 @@
-# this line is for copy-pasters...
-#         ...while you are removing my credit and calling yourself a developerr... 
-#         _____ just imagine, At that time i am fucking your mom and sis at same time, harder & too harder...
-#
-# Credit @Simplifytuber2.
-# Please Don't remove credit.
-# Born to make history @LazyDeveloper !
-# for any error please contact me -> telegram@Simplifytuber2
+#!/bin/bash
+
+if [ -z "$UPSTREAM_REPO" ]; then
+  echo "Cloning main Repository"
+  git clone https://github.com/lazyindu/test1.git ./LazyPrincess
+else
+  echo "Cloning Custom Repo from $UPSTREAM_REPO"
+  git clone "$UPSTREAM_REPO" ./LazyPrincess
+fi
+
+cd ./LazyPrincess || exit
+pip3 install -U -r requirements.txt
+echo "Starting Bot...."
+exec python3 bot.py

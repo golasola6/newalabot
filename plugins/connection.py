@@ -1,3 +1,6 @@
+# with Love @LazyDeveloperr 💘
+# Subscribe YT @LazyDeveloperr - to learn more about this for free...
+
 from pyrogram import filters, Client, enums
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from database.connections_mdb import add_connection, all_connections, if_active, delete_connection
@@ -142,6 +145,6 @@ async def connections(client, message):
         )
     else:
         await message.reply_text(
-            "There are no active connections!! Connect to some groups first.",
+            "There are no active connections!! Connect me to some groups first.",
             quote=True
         )

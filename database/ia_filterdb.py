@@ -5,11 +5,11 @@ import base64
 from pyrogram.file_id import FileId
 from pymongo.errors import DuplicateKeyError
 from umongo import Instance, Document, fields
-
-from marshmallow.exceptions import ValidationError
 from motor.motor_asyncio import AsyncIOMotorClient
-from info import DATABASE_URI, DATABASE_NAME, COLLECTION_NAME, USE_CAPTION_FILTER, MAX_B_TN
-from utils import get_settings, save_group_settings
+from marshmallow.exceptions import ValidationError
+from info import DATABASE_URI, DATABASE_NAME, COLLECTION_NAME, USE_CAPTION_FILTER,MAX_LAZY_BTNS
+from utils import get_settings, save_group_settings, temp
+
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -66,24 +66,91 @@ async def save_file(media):
             logger.info(f'{getattr(media, "file_name", "NO_FILE")} is saved to database')
             return True, 1
 
+# working - not using
+async def get_ai_results(query, max_results=10, offset=0, lang=None):
+    query = query.strip()
+    if not query:
+        raw_pattern = '.'
+    elif ' ' not in query:
+        raw_pattern = r'(\b|[\.\+\-_])' + query + r'(\b|[\.\+\-_])'
+    else:
+        raw_pattern = query.replace(' ', r'.*[\s\.\+\-_]') 
+    try:
+        regex = re.compile(raw_pattern, flags=re.IGNORECASE)
+    except:
+        regex = query
+    filter = {'file_name': regex}
+    cursor = Media.find(filter)
+    cursor.sort('$natural', -1)
+    if lang:
+        lang_files = [file async for file in cursor if lang in file.file_name.lower()]
+        files = lang_files[offset:][:max_results]
+        total_results = len(lang_files)
+        next_offset = offset + max_results
+        if next_offset >= total_results:
+            next_offset = ''
+        return files, next_offset, total_results
+    cursor.skip(offset).limit(max_results)
+    files = await cursor.to_list(length=max_results)
+    total_results = await Media.count_documents(filter)
+    next_offset = offset + max_results
+    if next_offset >= total_results:
+        next_offset = ''       
+    return files, next_offset, total_results
 
-
-async def get_search_results(chat_id, query, file_type=None, max_results=10, offset=0, filter=False):
+# working - using
+async def get_search_results_badAss_LazyDeveloperr(chat_id, lazy_id, query, file_type=None, max_results=10, offset=0, filter=False):
     """For given query return (results, next_offset)"""
-    if chat_id is not None:
-        settings = await get_settings(int(chat_id))
-        try:
-            if settings['max_btn']:
-                max_results = 10
-            else:
-                max_results = int(MAX_B_TN)
-        except KeyError:
-            await save_group_settings(int(chat_id), 'max_btn', False)
-            settings = await get_settings(int(chat_id))
-            if settings['max_btn']:
-                max_results = 10
-            else:
-                max_results = int(MAX_B_TN)
+    max_results = int(MAX_LAZY_BTNS)
+    query = query.strip()
+    if not query:
+        raw_pattern = '.'
+    elif ' ' not in query:
+        raw_pattern = r'(\b|[\.\+\-_])' + query + r'(\b|[\.\+\-_])'
+    else:
+        raw_pattern = query.replace(' ', r'.*[\s\.\+\-_]')
+    try:
+        regex = re.compile(raw_pattern, flags=re.IGNORECASE)
+    except:
+        return []
+
+    if USE_CAPTION_FILTER:
+        filter = {'$or': [{'file_name': regex}, {'caption': regex}]}
+    else:
+        filter = {'file_name': regex}
+
+    if file_type:
+        filter['file_type'] = file_type
+
+    total_results = await Media.count_documents(filter)
+    next_offset = offset + max_results
+
+    if next_offset > total_results:
+        next_offset = ''
+
+    cursor = Media.find(filter)
+
+    # Sort by recent
+    cursor.sort('$natural', -1)
+    
+    # --- Get Full Result Set for Season Matching ---
+    # Slice files according to offset and max results
+    cursor.skip(offset).limit(max_results)
+    # Get list of files
+    files = await cursor.to_list(length=max_results)
+    try:
+        key = f"{chat_id}-{lazy_id}"
+        full_cursor = Media.find(filter).sort('$natural', -1)
+        lazydevfiles = await full_cursor.to_list(length=None)
+        temp.LAZY_LOCAL_FILES[key] = lazydevfiles    
+    except:
+        pass
+    return files, next_offset, total_results
+
+
+async def get_search_results(query, file_type=None, max_results=10, offset=0, filter=False):
+    """For given query return (results, next_offset)"""
+
     query = query.strip()
     #if filter:
         #better ?
@@ -125,42 +192,6 @@ async def get_search_results(chat_id, query, file_type=None, max_results=10, off
 
     return files, next_offset, total_results
 
-async def get_bad_files(query, file_type=None, filter=False):
-    """For given query return (results, next_offset)"""
-    query = query.strip()
-    #if filter:
-        #better ?
-        #query = query.replace(' ', r'(\s|\.|\+|\-|_)')
-        #raw_pattern = r'(\s|_|\-|\.|\+)' + query + r'(\s|_|\-|\.|\+)'
-    if not query:
-        raw_pattern = '.'
-    elif ' ' not in query:
-        raw_pattern = r'(\b|[\.\+\-_])' + query + r'(\b|[\.\+\-_])'
-    else:
-        raw_pattern = query.replace(' ', r'.*[\s\.\+\-_]')
-    
-    try:
-        regex = re.compile(raw_pattern, flags=re.IGNORECASE)
-    except:
-        return []
-
-    if USE_CAPTION_FILTER:
-        filter = {'$or': [{'file_name': regex}, {'caption': regex}]}
-    else:
-        filter = {'file_name': regex}
-
-    if file_type:
-        filter['file_type'] = file_type
-
-    total_results = await Media.count_documents(filter)
-
-    cursor = Media.find(filter)
-    # Sort by recent
-    cursor.sort('$natural', -1)
-    # Get list of files
-    files = await cursor.to_list(length=total_results)
-
-    return files, total_results
 
 async def get_file_details(query):
     filter = {'file_id': query}
@@ -204,107 +235,3 @@ def unpack_new_file_id(new_file_id):
     )
     file_ref = encode_file_ref(decoded.file_reference)
     return file_id, file_ref
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# this line is for copy-pasters...
-#         ...while you are removing my credit and calling yourself a developerr... 
-#         _____ just imagine, At that time i am fucking your mom and sis at same time, harder & too harder...
-#
-# Credit @Simplifytuber2.
-# Please Don't remove credit.
-# Born to make history @LazyDeveloper !
-# for any error please contact me -> telegram@Simplifytuber2
